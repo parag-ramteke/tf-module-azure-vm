@@ -364,7 +364,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
 #---------------------------------------
 resource "azurerm_managed_disk" "data_disk" {
   for_each             = local.vm_data_disks
-  name                 = "${var.virtual_machine_name}_DataDisk_${each.value.idx}"
+  name                 = lower("${var.virtual_machine_name}-DataDisk-${each.value.idx}")
   resource_group_name  = data.azurerm_resource_group.rg.name
   location             = data.azurerm_resource_group.rg.location
   storage_account_type = lookup(each.value.data_disk, "storage_account_type", "StandardSSD_LRS")
