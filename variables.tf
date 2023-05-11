@@ -3,6 +3,11 @@ variable "resource_group_name" {
   default     = ""
 }
 
+variable "app_resource_group_name" {
+  description = "A conatiner that hold app specific resources"
+  default = ""
+}
+
 variable "location" {
   description = "The location/region to keep all your network resources. To get the list of all locations with table format from azure cli, run 'az account list-locations -o table'"
   default     = ""

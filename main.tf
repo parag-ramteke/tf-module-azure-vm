@@ -33,18 +33,10 @@ data "azurerm_virtual_network" "vnet" {
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
-#data "azurerm_subnet" "snet" {
-#  name                 = var.subnet_name
-#  virtual_network_name = data.azurerm_virtual_network.vnet.name
-#  resource_group_name  = data.azurerm_resource_group.rg.name
-#  virtual_network_name = "vnet-rbro-it-azureapps-test-001"
-#  resource_group_name  = "rg-rbro-it-azureapps-network-test-we-001"
-#}
-
 data "azurerm_storage_account" "storeacc" {
   count               = var.storage_account_name != null ? 1 : 0
   name                = var.storage_account_name
-  resource_group_name = data.azurerm_resource_group.rg.name
+  resource_group_name = var.app_resource_group_name
 }
 
 resource "random_password" "passwd" {
@@ -67,7 +59,7 @@ resource "azurerm_public_ip" "pip" {
   count               = var.enable_public_ip_address == true ? var.instances_count : 0
   name                = lower("pip-vm-${var.virtual_machine_name}-${data.azurerm_resource_group.rg.location}-0${count.index + 1}")
   location            = data.azurerm_resource_group.rg.location
-  resource_group_name = data.azurerm_resource_group.rg.name
+  resource_group_name = var.app_resource_group_name
   allocation_method   = var.public_ip_allocation_method
   sku                 = var.public_ip_sku
   sku_tier            = var.public_ip_sku_tier
@@ -89,7 +81,8 @@ resource "azurerm_public_ip" "pip" {
 resource "azurerm_network_interface" "nic" {
   count                         = var.instances_count
   name                          = var.instances_count == 1 ? lower("nic-${format("vm%s", lower(replace(var.virtual_machine_name, "/[[:^alnum:]]/", "")))}") : lower("nic-${format("vm%s%s", lower(replace(var.virtual_machine_name, "/[[:^alnum:]]/", "")), count.index + 1)}")
-  resource_group_name           = data.azurerm_resource_group.rg.name
+#  resource_group_name           = data.azurerm_resource_group.rg.name
+resource_group_name             = var.app_resource_group_name
   location                      = data.azurerm_resource_group.rg.location
   dns_servers                   = var.dns_servers
   enable_ip_forwarding          = var.enable_ip_forwarding
@@ -120,7 +113,7 @@ resource "azurerm_network_interface" "nic" {
 resource "azurerm_proximity_placement_group" "appgrp" {
   count               = var.enable_proximity_placement_group ? 1 : 0
   name                = lower("proxigrp-${var.virtual_machine_name}-${data.azurerm_resource_group.rg.location}")
-  resource_group_name = data.azurerm_resource_group.rg.name
+  resource_group_name = var.app_resource_group_name
   location            = data.azurerm_resource_group.rg.location
   tags                = merge({ "ResourceName" = lower("proxigrp-${var.virtual_machine_name}-${data.azurerm_resource_group.rg.location}") }, var.tags, )
 
@@ -137,7 +130,7 @@ resource "azurerm_proximity_placement_group" "appgrp" {
 resource "azurerm_availability_set" "aset" {
   count                        = var.enable_vm_availability_set ? 1 : 0
   name                         = lower("avail-${var.virtual_machine_name}-${data.azurerm_resource_group.rg.location}")
-  resource_group_name          = data.azurerm_resource_group.rg.name
+  resource_group_name          = var.app_resource_group_name
   location                     = data.azurerm_resource_group.rg.location
   platform_fault_domain_count  = var.platform_fault_domain_count
   platform_update_domain_count = var.platform_update_domain_count
@@ -198,7 +191,7 @@ resource "azurerm_network_interface_security_group_association" "nsgassoc" {
 resource "azurerm_linux_virtual_machine" "linux_vm" {
   count                           = var.os_flavor == "linux" ? var.instances_count : 0
   name                            = var.instances_count == 1 ? substr(var.virtual_machine_name, 0, 64) : substr(format("%s%s", lower(replace(var.virtual_machine_name, "/[[:^alnum:]]/", "")), count.index + 1), 0, 64)
-  resource_group_name             = data.azurerm_resource_group.rg.name
+  resource_group_name             = var.app_resource_group_name
   location                        = data.azurerm_resource_group.rg.location
   size                            = var.virtual_machine_size
   admin_username                  = var.admin_username
@@ -365,7 +358,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
 resource "azurerm_managed_disk" "data_disk" {
   for_each             = local.vm_data_disks
   name                 = lower("${var.virtual_machine_name}-DataDisk-${each.value.idx}")
-  resource_group_name  = data.azurerm_resource_group.rg.name
+  resource_group_name  = var.app_resource_group_name
   location             = data.azurerm_resource_group.rg.location
   storage_account_type = lookup(each.value.data_disk, "storage_account_type", "StandardSSD_LRS")
   create_option        = "Empty"
