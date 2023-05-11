@@ -122,6 +122,10 @@ variable "virtual_machine_name" {
   default     = ""
 }
 
+variable "computer_name" {
+  description = "Computer name to be assigned to windows server"
+}
+
 variable "instances_count" {
   description = "The number of Virtual Machines required."
   default     = 1
