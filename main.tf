@@ -146,41 +146,42 @@ resource "azurerm_availability_set" "aset" {
 #---------------------------------------------------------------
 # Network security group for Virtual Machine Network Interface
 #---------------------------------------------------------------
-resource "azurerm_network_security_group" "nsg" {
-  count               = var.existing_network_security_group_id == null ? 1 : 0
-  name                = lower("nsg_${var.virtual_machine_name}_${data.azurerm_resource_group.rg.location}_in")
-  resource_group_name = var.app_resource_group_name
-  location            = data.azurerm_resource_group.rg.location
-  tags                = merge({ "ResourceName" = lower("nsg_${var.virtual_machine_name}_${data.azurerm_resource_group.rg.location}_in") }, var.tags, )
+#resource "azurerm_network_security_group" "nsg" {
+#  count               = var.existing_network_security_group_id == null ? 1 : 0
+#  name                = lower("nsg_${var.virtual_machine_name}_${data.azurerm_resource_group.rg.location}_in")
+#  resource_group_name = var.app_resource_group_name
+#  location            = data.azurerm_resource_group.rg.location
+#  tags                = merge({ "ResourceName" = lower("nsg_${var.virtual_machine_name}_${data.azurerm_resource_group.rg.location}_in") }, var.tags, )
 
-  lifecycle {
-    ignore_changes = [
-      tags,
-    ]
-  }
-}
+#  lifecycle {
+#    ignore_changes = [
+#      tags,
+#    ]
+#  }
+#}
 
-resource "azurerm_network_security_rule" "nsg_rule" {
-  for_each                    = { for k, v in local.nsg_inbound_rules : k => v if k != null }
-  name                        = each.key
-  priority                    = 100 * (each.value.idx + 1)
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = each.value.security_rule.destination_port_range
-  source_address_prefix       = each.value.security_rule.source_address_prefix
-  destination_address_prefix  = element(concat(var.subnet_name.address_prefixes, [""]), 0)
-  description                 = "Inbound_Port_${each.value.security_rule.destination_port_range}"
-  resource_group_name         = data.azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.nsg.0.name
-  depends_on                  = [azurerm_network_security_group.nsg]
-}
+#resource "azurerm_network_security_rule" "nsg_rule" {
+#  for_each                    = { for k, v in local.nsg_inbound_rules : k => v if k != null }
+#  name                        = each.key
+#  priority                    = 100 * (each.value.idx + 1)
+#  direction                   = "Inbound"
+#  access                      = "Allow"
+#  protocol                    = "Tcp"
+#  source_port_range           = "*"
+#  destination_port_range      = each.value.security_rule.destination_port_range
+#  source_address_prefix       = each.value.security_rule.source_address_prefix
+#  destination_address_prefix  = element(concat(var.subnet_name.address_prefixes, [""]), 0)
+#  description                 = "Inbound_Port_${each.value.security_rule.destination_port_range}"
+#  resource_group_name         = var.app_resource_group_name
+#  network_security_group_name = azurerm_network_security_group.nsg.0.name
+#  depends_on                  = [azurerm_network_security_group.nsg]
+#}
 
 resource "azurerm_network_interface_security_group_association" "nsgassoc" {
   count                     = var.instances_count
   network_interface_id      = element(concat(azurerm_network_interface.nic.*.id, [""]), count.index)
-  network_security_group_id = var.existing_network_security_group_id == null ? azurerm_network_security_group.nsg.0.id : var.existing_network_security_group_id
+#  network_security_group_id = var.existing_network_security_group_id == null ? azurerm_network_security_group.nsg.0.id : var.existing_network_security_group_id
+ network_security_group_id = var.existing_network_security_group_id
 }
 
 #---------------------------------------
@@ -434,9 +435,11 @@ resource "azurerm_virtual_machine_extension" "omsagentlinux" {
 # azurerm monitoring diagnostics 
 #--------------------------------------
 resource "azurerm_monitor_diagnostic_setting" "nsg" {
-  count                      = var.existing_network_security_group_id == null && var.log_analytics_workspace_id != null ? 1 : 0
+#  count                      = var.existing_network_security_group_id == null && var.log_analytics_workspace_id != null ? 1 : 0
+  count                      =  var.log_analytics_workspace_id != null ? 1 : 0
   name                       = lower("nsg-${var.virtual_machine_name}-diag")
-  target_resource_id         = azurerm_network_security_group.nsg.0.id
+  #target_resource_id         = azurerm_network_security_group.nsg.0.id
+  target_resource_id        = var.existing_network_security_group_id
   storage_account_id         = var.storage_account_name != null ? data.azurerm_storage_account.storeacc.0.id : null
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
