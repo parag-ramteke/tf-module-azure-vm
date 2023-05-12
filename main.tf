@@ -81,8 +81,7 @@ resource "azurerm_public_ip" "pip" {
 resource "azurerm_network_interface" "nic" {
   count                         = var.instances_count
   name                          = var.instances_count == 1 ? lower("nic-${format("vm%s", lower(replace(var.virtual_machine_name, "/[[:^alnum:]]/", "")))}") : lower("nic-${format("vm%s%s", lower(replace(var.virtual_machine_name, "/[[:^alnum:]]/", "")), count.index + 1)}")
-#  resource_group_name           = data.azurerm_resource_group.rg.name
-resource_group_name             = var.app_resource_group_name
+  resource_group_name             = var.app_resource_group_name
   location                      = data.azurerm_resource_group.rg.location
   dns_servers                   = var.dns_servers
   enable_ip_forwarding          = var.enable_ip_forwarding
@@ -93,7 +92,6 @@ resource_group_name             = var.app_resource_group_name
   ip_configuration {
     name                          = lower("ipconig-${format("vm%s%s", lower(replace(var.virtual_machine_name, "/[[:^alnum:]]/", "")), count.index + 1)}")
     primary                       = true
-    #subnet_id                     = data.azurerm_subnet.snet.id
     subnet_id                     = var.subnet_name
     private_ip_address_allocation = var.private_ip_address_allocation_type
     private_ip_address            = var.private_ip_address_allocation_type == "Static" ? element(concat(var.private_ip_address, [""]), count.index) : null
@@ -151,7 +149,7 @@ resource "azurerm_availability_set" "aset" {
 resource "azurerm_network_security_group" "nsg" {
   count               = var.existing_network_security_group_id == null ? 1 : 0
   name                = lower("nsg_${var.virtual_machine_name}_${data.azurerm_resource_group.rg.location}_in")
-  resource_group_name = data.azurerm_resource_group.rg.name
+  resource_group_name = var.app_resource_group_name
   location            = data.azurerm_resource_group.rg.location
   tags                = merge({ "ResourceName" = lower("nsg_${var.virtual_machine_name}_${data.azurerm_resource_group.rg.location}_in") }, var.tags, )
 
@@ -267,9 +265,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
 #---------------------------------------
 resource "azurerm_windows_virtual_machine" "win_vm" {
   count                        = var.os_flavor == "windows" ? var.instances_count : 0
-#  name                         = var.instances_count == 1 ? substr(var.virtual_machine_name, 0, 15) : substr(format("%s%s", lower(replace(var.virtual_machine_name, "/[[:^alnum:]]/", "")), count.index + 1), 0, 15)
   name                         = var.virtual_machine_name
-#  computer_name                = var.instances_count == 1 ? substr(var.virtual_machine_name, 0, 15) : substr(format("%s%s", lower(replace(var.virtual_machine_name, "/[[:^alnum:]]/", "")), count.index + 1), 0, 15)
   computer_name                = var.computer_name
   resource_group_name          = var.app_resource_group_name
   location                     = data.azurerm_resource_group.rg.location
