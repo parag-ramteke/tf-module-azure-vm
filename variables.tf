@@ -369,7 +369,7 @@ variable "linux_distribution_list" {
     rhel81-gen2 = {
       publisher = "RedHat"
       offer     = "RHEL"
-      sku       = "81gen2"
+      sku       = "81-gen2"
       version   = "latest"
     },
 
@@ -383,7 +383,7 @@ variable "linux_distribution_list" {
     rhel82-gen2 = {
       publisher = "RedHat"
       offer     = "RHEL"
-      sku       = "82gen2"
+      sku       = "82-gen2"
       version   = "latest"
     },
 
@@ -397,7 +397,7 @@ variable "linux_distribution_list" {
     rhel83-gen2 = {
       publisher = "RedHat"
       offer     = "RHEL"
-      sku       = "83gen2"
+      sku       = "83-gen2"
       version   = "latest"
     },
 
@@ -411,7 +411,14 @@ variable "linux_distribution_list" {
     rhel84-gen2 = {
       publisher = "RedHat"
       offer     = "RHEL"
-      sku       = "84gen2"
+      sku       = "84-gen2"
+      version   = "latest"
+    },
+    
+     rhel90-gen2 = {
+      publisher = "RedHat"
+      offer     = "RHEL"
+      sku       = "90-gen2"
       version   = "latest"
     },
 
